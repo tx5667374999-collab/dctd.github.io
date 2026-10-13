@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN" class="dark bg-[#090d16]">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GameFeedback Hub - 玩家反馈与SMTP服务系统</title>
+    <meta name="description" content="接收玩家游戏反馈并智能分类归档，支持后台实时查阅管理与SMTP邮件服务器配置及一键回邮通知" />
+    <meta property="og:title" content="GameFeedback Hub - 玩家反馈与SMTP服务系统" />
+    <meta property="og:description" content="接收玩家游戏反馈并智能分类归档，支持后台实时查阅管理与SMTP邮件服务器配置及一键回邮通知" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <style>
+      html, body {
+        background-color: #090d16;
+        color: #f8fafc;
+        margin: 0;
+        padding: 0;
+      }
+      @keyframes appSpin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body class="bg-[#090d16] text-slate-100 min-h-screen">
+    <div id="root">
+      <div id="app-loading-placeholder" style="min-height: 100vh; background-color: #090d16; color: #94a3b8; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; box-sizing: border-box; text-align: center;">
+        <div style="width: 36px; height: 36px; border: 3px solid #1e293b; border-top-color: #10b981; border-radius: 50%; animation: appSpin 1s linear infinite;"></div>
+        <p style="margin-top: 16px; font-size: 14px; color: #cbd5e1; font-weight: 500;">GameFeedback Hub 加载中...</p>
+        <div id="app-loading-error" style="display: none; max-width: 480px; width: 100%; margin-top: 16px;"></div>
+      </div>
+    </div>
+    <script>
+      (function() {
+        window.__APP_MOUNTED__ = false;
+        var errs = [];
+
+        function renderErrors() {
+          var el = document.getElementById('app-loading-error');
+          if (el && errs.length > 0) {
+            el.style.display = 'block';
+            el.innerHTML = '<div style="background:#1e1b2e;border:1px solid #7c3aed;color:#ddd6fe;padding:16px;border-radius:12px;font-size:12px;line-height:1.6;text-align:left;box-shadow:0 10px 25px rgba(0,0,0,0.5);">' +
+              '<div style="font-weight:bold;color:#a78bfa;margin-bottom:8px;font-size:13px;">🔍 部署环境检测与故障排除指引：</div>' +
+              errs.map(function(e){ return '<div style="margin-bottom:6px;word-break:break-all;">• ' + e + '</div>'; }).join('') +
+              '<div style="margin-top:14px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.1);display:flex;gap:10px;flex-wrap:wrap;">' +
+              '<button onclick="location.reload()" style="background:#10b981;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;">刷新重试</button>' +
+              '<button onclick="localStorage.clear();location.reload();" style="background:#374151;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;">清除缓存并刷新</button>' +
+              '</div></div>';
+          }
+        }
+
+        window.addEventListener('error', function(e) {
+          var target = e.target || e.srcElement;
+          var msg = e.message;
+          if (target && target.tagName === 'SCRIPT') {
+            msg = '资源加载失败 (HTTP 404 或网络阻断): ' + (target.src || 'script');
+          }
+          if (msg) {
+            errs.push(msg);
+            renderErrors();
+          }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function(e) {
+          var msg = e.reason ? (e.reason.message || String(e.reason)) : '异步错误';
+          errs.push('初始化异常: ' + msg);
+          renderErrors();
+        });
+
+        // 3.5s timeout check: if React hasn't mounted
+        setTimeout(function() {
+          if (!window.__APP_MOUNTED__) {
+            if (location.protocol === 'file:') {
+              errs.push('检测到您当前使用 file:// 双击直接打开 HTML。现代浏览器出于安全策略禁止直接加载本地 ES Module。请使用任意 Web 服务器（如 VSCode Live Server、Nginx、宝塔或静态空间托管）运行。');
+            } else if (errs.length === 0) {
+              errs.push('静态资源加载超时。请确认：<br>1. 上传时是否包含打包生成的 <strong>dist/assets</strong> 目录；<br>2. 部署平台（如 Vercel / Netlify / 宝塔）是否正确将构建目录设为 <strong>dist</strong>；<br>3. 可按 F12 打开浏览器控制台 (Console / Network) 查看具体 404 资源。');
+            }
+            renderErrors();
+          }
+        }, 3500);
+      })();
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
